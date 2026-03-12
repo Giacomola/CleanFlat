@@ -218,8 +218,13 @@
     if (flatmates.length === 0) {
       container.innerHTML = "";
       emptyEl.style.display = "block";
-      // Show a "skip" button to allow adding people
-      container.innerHTML = '<button class="form-submit login-skip-btn" id="login-skip">Continue without login</button>';
+      // Show buttons to create a person or skip login
+      container.innerHTML =
+        '<button class="form-submit login-skip-btn" id="login-add-person">Add person</button>' +
+        '<button class="text-btn login-skip-btn" id="login-skip">Continue without login</button>';
+      document.getElementById("login-add-person").addEventListener("click", function () {
+        openAddFlatmate(true);
+      });
       document.getElementById("login-skip").addEventListener("click", function () {
         currentUser = null;
         persistCurrentUser();
@@ -236,6 +241,8 @@
       html += '<span class="login-person-name">' + esc(fm.name) + "</span>";
       html += "</button>";
     });
+    // Small button to add another person directly from login
+    html += '<button class="text-btn login-add-person-secondary" id="login-add-person">+ Add person</button>';
     container.innerHTML = html;
 
     container.querySelectorAll(".login-person-btn").forEach(function (btn) {
@@ -249,6 +256,13 @@
         }
       });
     });
+
+    var addBtn = document.getElementById("login-add-person");
+    if (addBtn) {
+      addBtn.addEventListener("click", function () {
+        openAddFlatmate(true);
+      });
+    }
   }
 
   function enterApp() {
@@ -876,8 +890,7 @@
     });
   }
 
-  // Add flatmate
-  document.getElementById("add-flatmate-btn").addEventListener("click", function () {
+  function openAddFlatmate(autoLogin) {
     if (flatmates.length >= 8) {
       openModal("Limit Reached", '<p style="color:var(--color-text-muted)">Maximum 8 flatmates allowed.</p>');
       return;
@@ -898,12 +911,25 @@
       var name = document.getElementById("fm-name").value.trim();
       if (!name) return;
       apiFetch("/api/flatmates", { method: "POST", body: { name: name } })
-        .then(function () {
+        .then(function (created) {
           closeModal();
-          loadFlatmates();
-          loadSchedule();
+          if (autoLogin && created && created.id && created.name) {
+            currentUser = { id: created.id, name: created.name };
+            persistCurrentUser();
+            loadFlatmatesData().then(function () {
+              enterApp();
+            });
+          } else {
+            loadFlatmates();
+            loadSchedule();
+          }
         });
     });
+  }
+
+  // Add flatmate from "People" tab
+  document.getElementById("add-flatmate-btn").addEventListener("click", function () {
+    openAddFlatmate(false);
   });
 
   // ═══════════════════════════════════════════
