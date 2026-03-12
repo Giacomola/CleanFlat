@@ -1,0 +1,10 @@
+{
+  "name": "FlatClean",
+  "short_name": "FlatClean",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f7f6f2",
+  "theme_color": "#01696f",
+  "orientation": "portrait-primary"
+}
+
